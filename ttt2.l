@@ -55,6 +55,7 @@
    (format t "~%")
 )
 
+; sum the scores of a list
 (defun sumscore (sublst lst)
    (setf sum 0)
    (dolist (l sublst)
@@ -64,44 +65,46 @@
 )
 
 (defun analyze (lst)
+   ; extract out each players moves
    (setf playo (list (nth 1 lst) (nth 3 lst) (nth 5 lst) (nth 7 lst)))
    (setf playx (list (nth 0 lst) (nth 2 lst) (nth 4 lst) (nth 6 lst) (nth 8 lst)))
 
+   ; get a list of all the winning conditions
    (setf wcond '(
       (nw n ne) (e c w) (sw s se)
       (nw w sw) (n c s) (ne e se)
       (ne c sw) (nw c se)
    ))
 
+   ; set the score to the highest possible score (lower is better)
    (setf scorex 45)
    (setf scoreo 45)
 
+   ; move through the winning conditions and find the best play
    (dolist (w wcond)
       (cond
          ((eq (length (intersection w playx)) 3)  (setf scorex (sumscore w lst)))
          ((eq (length (intersection w playo)) 3)  (setf scoreo (sumscore w lst)))
       )
    )
-   (format t "~S ~S" scorex scoreo)
+
+   ; determine the winner or if the game is a draw
    (cond
       ((> scorex scoreo) (return-from analyze 'l))
       ((< scorex scoreo) (return-from analyze 'w))
    )
-
    (return-from analyze 'd)
+
+
+   ;TODO
+   ; In some circumstances, this method of calculation will not produce the
+   ; correct outcome:
+   ; (SE SW NE N W C NW S E)
+   ; X7 O4 X3
+   ; X5 O6 X9
+   ; O2 O8 X1
+   ; is classified as a Win for X, however in this situation, O will have won.
 )
-
-;(not (set-exclusive-or LIST1 LIST2))
-
-; W  SW SE C  NE S  NW E  N
-; X  O  X  O  X  O  X  O  X
-; 0  1  2  3  4  5  6  7  8
-
-
-; W     SE    NE    NW    N
-; X  O  X  O  X  O  X  O  X
-; 0  1  2  3  4  5  6  7  8
-
 
 ; DEMO VA
 (defmethod demo-va (&aux p)
