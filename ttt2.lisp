@@ -55,13 +55,15 @@
    (format t "~%")
 )
 
-; sum the scores of a list
-(defun sumscore (sublst lst)
-   (setf sum 0)
-   (dolist (l sublst)
-      (setf sum (+ sum (pos l lst)))
+; find the highest score for a given 'winning' outcome
+(defun find-highest (play lst)
+   (setf highest 0)
+   (dolist (n play)
+      (cond
+         ((> (pos n lst) highest) (setf highest (pos n lst)))
+      )
    )
-   (return-from sumscore sum)
+   (return-from find-highest highest)
 )
 
 (defun analyze (lst)
@@ -76,34 +78,27 @@
       (ne c sw) (nw c se)
    ))
 
-   ; set the score to the highest possible score (lower is better)
-   (setf scorex 45)
-   (setf scoreo 45)
-
+   ; allow wins to be stored in a list
+   (setf px '())
+   (setf po '())
    ; move through the winning conditions and find the best play
    (dolist (w wcond)
       (cond
-         ((eq (length (intersection w playx)) 3)  (setf scorex (sumscore w lst)))
-         ((eq (length (intersection w playo)) 3)  (setf scoreo (sumscore w lst)))
+         ((eq (length (intersection w playx)) 3) (setf px w))
+         ((eq (length (intersection w playo)) 3) (setf po w))
       )
    )
-
+   (setf highestx (find-highest px lst))
+   (setf highesto (find-highest po lst))
    ; determine the winner or if the game is a draw
    (cond
-      ((> scorex scoreo) (return-from analyze 'l))
-      ((< scorex scoreo) (return-from analyze 'w))
+      ((and (eq px nil) (eq po nil)) (return-from analyze 'd))
+      ((eq px nil) (return-from analyze 'l))
+      ((eq po nil) (return-from analyze 'w))
+      ((> highestx highesto) (return-from analyze 'l))
+      ((< highestx highesto) (return-from analyze 'w))
    )
-   (return-from analyze 'd)
-
-
-   ;TODO
-   ; In some circumstances, this method of calculation will not produce the
-   ; correct outcome:
-   ; (SE SW NE N W C NW S E)
-   ; X7 O4 X3
-   ; X5 O6 X9
-   ; O2 O8 X1
-   ; is classified as a Win for X, however in this situation, O will have won.
+   (return-from analyze '?)
 )
 
 ; DEMO VA
