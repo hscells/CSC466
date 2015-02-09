@@ -66,6 +66,7 @@
    (return-from find-highest highest)
 )
 
+; analyse the final play
 (defun analyze (lst)
    ; extract out each players moves
    (setf playo (list (nth 1 lst) (nth 3 lst) (nth 5 lst) (nth 7 lst)))
