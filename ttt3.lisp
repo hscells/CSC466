@@ -46,16 +46,32 @@
    )
 )
 
-; TODO
-; be able to visualize plays with nil in them
-(defun visualize (lst)
-   ;(drawrow '(nw n ne) lst)
-   ;(format t "~%")
-   ;(drawrow '(w c e) lst)
-   ;(format t "~%")
-   ;(drawrow '(sw s se) lst)
-   ;(format t "~%")
+(defmethod visualize ((lst list))
+   (setf grid '(nil nil nil nil nil nil nil nil nil))
+   (setf board '(nw n ne w c e sw s se))
+   (loop for i from 0 upto (length lst) do
+      (setf move (position (nth i board) lst :test #'equal))
+      (cond
+         ((not (eq move nil)) (setf (nth i grid) move))
+      )
+   )
+   (setf c 0)
    (format t "~S~%" lst)
+   (format t "~S~%" grid)
+   (format t "~S~%" board)
+   (dolist (g grid)
+      (cond
+         ((eq g nil) (format t " -- "))
+         (t (format t " ~S~S " (playern g) (+ g 1)))
+      )
+      (cond
+         ((eq c 2) (format t "~%"))
+         ((eq c 5) (format t "~%"))
+      )
+      (setf c (+ c 1))
+   )
+   (setf grid '(nil nil nil nil nil nil nil nil nil))
+   (format t "~%")
 )
 
 ; find the highest score for a given 'winning' outcome
@@ -202,7 +218,7 @@
          ((eq player 'x)
             (setf move (make-move x report))
          )
-         ((eq player 'y)
+         ((eq player 'o)
             (setf move (make-move o report))
          )
       )
@@ -236,6 +252,23 @@
       ((null (cdr l)) ())
       (t (cons (cadr l) (even (cddr l))))
    )
+)
+
+(defun line (a b c)
+   (setf l (list a b c))
+   (setf wcond '(
+      (nw n ne) (e c w) (sw s se)
+      (nw w sw) (n c s) (ne e se)
+      (ne c sw) (nw c se)
+   ))
+   (dolist (w wcond)
+      (cond
+         ((eq (length (intersection w l)) 3)
+            t
+         )
+      )
+   )
+   nil
 )
 
 ; TODO
@@ -285,7 +318,7 @@
 )
 
 ; a random machine player and a human play one game
-(defmethod demo-random-random (&aux p x o)
+(defmethod demo-random-human (&aux p x o)
    (setf x (make-instance 'random-machine-player))
    (setf o (make-instance 'human-player))
    (setf p (generic-play x o t))
