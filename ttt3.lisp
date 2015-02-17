@@ -56,9 +56,6 @@
       )
    )
    (setf c 0)
-   (format t "~S~%" lst)
-   (format t "~S~%" grid)
-   (format t "~S~%" board)
    (dolist (g grid)
       (cond
          ((eq g nil) (format t " -- "))
@@ -70,7 +67,6 @@
       )
       (setf c (+ c 1))
    )
-   (setf grid '(nil nil nil nil nil nil nil nil nil))
    (format t "~%")
 )
 
