@@ -11,3 +11,9 @@
       (t nil)
    )
 )
+
+(defclass h-m-p (player)
+   (
+      (rules :accessor h-m-p-r:initform())
+   )
+)
