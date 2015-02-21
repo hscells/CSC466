@@ -161,17 +161,75 @@
 ; a human player
 (defclass human-player (player) ())
 
+; heuristic machine player class
+(defclass heuristic-machine-player (player)
+   (
+      (rules :accessor heuristic-machine-player-rules :initform ())
+   )
+)
 ; textual display of a random machine player
 (defmethod display ((p random-machine-player))
    (format t "RANDOM MACHINE PLAYER ...~%")
    (format t "name = ~A~%" (player-name p))
    (format t "~%")
+   nil
 )
 ; textual display of a human player
 (defmethod display ((p human-player))
    (format t "HUMAN PLAYER ...~%")
    (format t "name = ~A~%" (player-name p))
    (format t "~%")
+   nil
+)
+; textual display of a human player
+(defmethod display ((p heuristic-machine-player))
+   (format t "HEURISTIC MACHINE PLAYER ...~%")
+   (format t "name = ~A~%" (player-name p))
+   (format t "number of rules = ~A~%" (length (heuristic-machine-player-rules p)))
+   (format t "rules ... ~%")
+   (dolist (rule (heuristic-machine-player-rules p))
+      (print-rule rule) (terpri)
+   )
+   (format t "~%")
+   nil
+)
+
+(defmethod make-rule ( (l list) )
+   (setf if-part (list 'prefix 'of l 'matches 'the 'play 'so 'far))
+   (setf then-part (list 'select 'move 'from l))
+   (list 'if if-if-part 'then then-part)
+)
+
+(defmethod add-rule ((p heuristic-machine-player) (l list))
+   (setf
+      (heuristic-machine-player-rules p)
+      (append (heuristic-machine-player-rules p) (list (make-rule l)))
+   )
+   nil
+)
+
+(defmethod add-rules ((p heuristic-machine-player) (n integer))
+   (dotimes (i n) (add-rule p (winning-play)))
+   nil
+)
+
+(defmethod print-rule ((rule list))
+   (format t "~A " (first rule))
+   (format t "~A~%" (second rule))
+   (format t "~A " (third rule))
+   (format t "~A~%" (forth rule))
+   nil
+)
+
+(defmethod winning-play (&aux p)
+   (setf p (play))
+   (cond
+      ((eq (analyze p) 'w)
+         p
+      )
+      (t
+         (winning-play))
+   )
 )
 
 ; move making method for machine
@@ -202,6 +260,66 @@
    move
 )
 
+(defmethod make-move ((p heuristic-machine-player) (report t) &aux rule move)
+   (if report (format t "BEGIN HEURISTIC PLAYER MOVE ...~%"))
+   (setf rule (select-from-rule-base p))
+   (if (null rule)
+      (let ()
+         (setf move (select *avail*))
+         (setf *nr-random-moves-by-hmp* (+ 1 *nr-random-moves-by-hmp))
+         (setf *most-recent-hmp-move* 'random)
+         (if report (format t "making a random move ~A since no rule is applicable.~%" move))
+      )
+      (let ()
+         (setf move (apply-rule rule))
+         (setf *nr-heuristic-moves-by-hmp* (+ 1 *nr-heuristic-moves-by-hmp*))
+         (setf *most-recent-hmp-move* 'heuristic)
+         (if report (format t "play so far = ~A~%" *play-so-far*))
+         (if report (format t "making move ~A by applying the rule ... ~%" move))
+         (if report (print-rule rule))
+      )
+   )
+   (setf *avail* (remove move *avail*))
+   (if report format t "end heuristic player move~%")
+   move
+)
+
+(defmethod select-from-rule-base ((p heuristic-machine-player) &aux rule-base)
+   (setf rule-base (heuristic-machine-player-rules p))
+   (dolist (rule rule-base)
+      (cond
+         ((applicablep rule)
+            (return-from select-from-rule-base rule)
+         )
+      )
+   )
+   nil
+)
+
+(defmethod applicablep ((rule list))
+   (setf the-play (third (second rule)))
+   (matches *play-so-far* the-play)
+)
+
+(defmethod matches ((psf list) (play list))
+   (cond
+      ((null psf)
+         t
+      )
+      ((eq (car psf) (car play))
+         (matches (cdr psf) (cdr play))
+      )
+      (t
+         nil
+      )
+   )
+)
+
+(defmethod apply-rule ((rule list) &aux the-play)
+   (setf the-play (fourth (fourth rule)))
+   (nth (length *play-so-far*) the-play)
+)
+
 ; a generic play method
 (defmethod generic-play ((x player) (o player) (report t) &aux move)
    (setf *avail* '(nw n ne w c e sw s se))
@@ -220,6 +338,37 @@
       )
       (setf *play-so-far* (snoc move *play-so-far*))
       (if (game-over-p *play-so-far*) (return nil))
+   )
+   *play-so-far*
+)
+
+(defmethod generic-play-with-stats ((x player) (o player) (report t) &aux move)
+   (setf *avail* '(nw n ne w c e sw s se))
+   (setf *play-so-far* ())
+   (dolist (player '(x o x o x o x o x))
+      (visualize *play-so-far*)
+      (cond
+         ((eq player 'x)
+            (setf move (make-move x report))
+         )
+         ((eq player 'o)
+            (setf move (make-move o report))
+         )
+      )
+      (setf *play-so-far* (snoc move *play-so-far*))
+      (if (game-over-p *play-so-far) return nil)
+   )
+   (cond
+      ((eq (analyze *play-so-far* 'w)
+         (cond
+            ((eq *most-recent-hmp-move 'random)
+               (setf *nr-random-moves-wins-by-hmp* (+ 1 *nr-random-moves-wins-by-hmp*))
+            )
+            ((eq *most-recent-hmp-move 'heuristic)
+               (setf *nr-heristic-move-wins-by-hmp* (+ 1 *nr-heristic-move-wins-by-hmp*))
+            )
+         )
+      )
    )
    *play-so-far*
 )
@@ -302,6 +451,16 @@
    )
 )
 
+(defmethod summarize-heuristic-use ()
+   (format t "random move count = ~A and heuristic move count = ~A~%"
+      *nr-random-moves-by-hmp* *nr-heuristic-moves-by-hmp*
+   )
+   (format t "random move wins = ~A and heuristic move wins = ~A~%"
+      *nr-random-moves-wins-by-hmp* *nr-heuristic-moves-wins-by-hmp*
+   )
+   nil
+)
+
 ; two random players play one game
 (defmethod demo-random-random (&aux p x o)
    (setf x (make-instance 'random-machine-player))
@@ -321,5 +480,45 @@
    (format t "~A~%" p)
    (visualize p)
    (format t "~A~%" (analyze p))
+   nil
+)
+; a heuristic machine player and a human play one game
+(defmethod demo-heuristic-human ((nr-rules integer) &aux p x o)
+   (setf *nr-random-moves-by-hmp* 0)
+   (setf *nr-heuristic-moves-by-hmp* 0)
+   (setf *nr-random-moves-wins-by-hmp* 0)
+   (setf *nr-heuristic-moves-wins-by-hmp* 0)
+   (setf x (make-instance 'heuristic-machine-player :name 'hm))
+   (add-rules x nr-rules)
+   (display x)
+   (setf o (make-instance 'human-player :name 'hu))
+   (display o)
+   (setf p (generic-play-with-stats x o t))
+   (format t "Game Summary~%")
+   (format t "Play of the game = ~A~%" p)
+   (visualize p)
+   (format t "~A~%" (analyze p))
+   (format t "heuristic use summary~%")
+   (summarize-heuristic-use)
+   nil
+)
+; a heuristic machine player and a random machine player play one game
+(defmethod demo-heuristic-random ((nr-rules integer) &aux p x o)
+   (setf *nr-random-moves-by-hmp* 0)
+   (setf *nr-heuristic-moves-by-hmp* 0)
+   (setf *nr-random-moves-wins-by-hmp* 0)
+   (setf *nr-heuristic-moves-wins-by-hmp* 0)
+   (setf x (make-instance 'heuristic-machine-player :name 'hm))
+   (add-rules x nr-rules)
+   (display x)
+   (setf o (make-instance 'random-machine-player :name 'rm))
+   (display o)
+   (setf p (generic-play-with-stats x o t))
+   (format t "Game Summary~%")
+   (format t "Play of the game = ~A~%" p)
+   (visualize p)
+   (format t "~A~%" (analyze p))
+   (format t "heuristic use summary~%")
+   (summarize-heuristic-use)
    nil
 )
