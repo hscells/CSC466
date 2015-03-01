@@ -391,7 +391,7 @@
                (setf *nr-random-moves-wins-by-hmp* (+ 1 *nr-random-moves-wins-by-hmp*))
             )
             ((eq *most-recent-hmp-move* 'heuristic)
-               (setf *nr-heristic-move-wins-by-hmp* (+ 1 *nr-heristic-move-wins-by-hmp*))
+               (setf *nr-heuristic-move-wins-by-hmp* (+ 1 *nr-heuristic-move-wins-by-hmp*))
             )
          )
       )
@@ -411,9 +411,61 @@
             (setf move (make-random-move o demo))
          )
       )
+      (setf *play-so-far* (snoc move *play-so-far*))
+      (if (game-over-p *play-so-far*) (return nil))
    )
-   (setf *play-so-far* (snoc move *play-so-far*))
-   (if (game-over-p *play-so-far*) (return nil))
+   (if demo (visualize *play-so-far*))
+   *play-so-far*
+)
+
+(defmethod random-play-and-learn (
+   (x heuristic-learning-machine) (o random-machine-player) (verbose t)
+   &aux p result
+   )
+   (setf p (random-play x o verbose))
+   (setf result (analyze p))
+   (cond
+      ((eq result 'w)
+         (if verbose (format t "winning play = ~A~%" p))
+         (add-rule x p)
+      )
+      (t
+         (if verbose (format t "no winning play, so no rule is created.~%"))
+      )
+   )
+)
+
+(defmethod heuristic-play (
+   (x heuristic-learning-machine-player) (o random-machine-player) (record t)
+   &aux move
+   )
+   (setf *avail* '(nw n ne w c e sw s se))
+   (setf *play-so-far* ())
+   (dolist (player '(x o x o x o x o x))
+      (cond
+         ((eq player 'x)
+            setf move (make-heurisic-move x record))
+         )
+         ((eq player 'o)
+            (setf move (make-random-move o record))
+         )
+      )
+      (setf *play-so-far* (snoc move *play-so-far*))
+      (if (game-over-p *play-so-far*) (return nil))
+   )
+   (cond
+      ((eq (analyze *play-so-far* 'w))
+         (cond
+            ((eq *most-recent-hmp-move* 'random)
+               (setf *nr-random-moves-wins-by-hmp* (+ 1 *nr-random-moves-wins-by-hmp*))
+            )
+            ((eq *most-recent-hmp-move* 'heuristic)
+               (setf *nr-heuristic-move-wins-by-hmp* (+ 1 *nr-heuristic-moves-wins-by-hmp*))
+            )
+         )
+      )
+   )
+   *play-so-far*
 )
 
 ; predicate to determine if the play is over or not
@@ -564,4 +616,22 @@
    (format t "heuristic use summary~%")
    (summarize-heuristic-use)
    nil
+)
+
+; diachronic demo of heuristic learning machine vs random machine
+(defmethod demo-hlm-vs-random ((nlt integer) (tnt integer) (verbose t) &aux s p x o hp)
+   (setf x (make-instance 'heuristic-learning-machine-player :name 'hlm))
+   (if verbose (display x))
+   (setf o (make-instance 'random-machine-player))
+   (if verbose (display o))
+   (setf s (statistics #'heuristic-play x o tnt verbose))
+   (format t "stats before learning = ~A~%" s)
+   (if verbose (format t "begin gaining extperience ...~%"))
+   (dotimes (i nlt)
+      (random-play-and-learn x o verbose)
+   )
+   (if verbose (format t "end gaining extperience ...~%"))
+   (if verbose (display x))
+   (setf s (statistics #'heuristic-play x o tnt verbose))
+   (format t "stats after learning = ~A~%" s)
 )
