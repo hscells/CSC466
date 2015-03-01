@@ -409,11 +409,11 @@
    (dolist (w wcond)
       (cond
          ((eq (length (intersection w l)) 3)
-            t
+            (return-from line t)
          )
       )
    )
-   nil
+   (return-from line nil)
 )
 
 ; TODO
