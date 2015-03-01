@@ -145,31 +145,6 @@
    (mapcar #'list '(w l d) results)
 )
 
-(defmethod statistics ((play function) (x player) (o player) (n number) (demo t) &aux w ld )
-   (if demo (format t "begin gathering statistics ... ~%"))
-   (setf *nr-random-moves-by-hmp* 0)
-   (setf *nr-heuristic-moves-by-hmp* 0)
-   (setf *nr-random-moves-wins-by-hmp* 0)
-   (setf *nr-heuristic-move-wins-by-hmp* 0)
-   (setf w 0 l 0 d 0)
-   (dotimes (i n)
-      (setf p (apply play (list x o demo)))
-      (if demo (format t "~A~%" p))
-      (if demo (visualize p))
-      (setf result (analyze p))
-      (if demo (format t "~A~%" result))
-      (cond
-         ((eq result 'w) (setf w (+ w 1)))
-         ((eq result 'l) (setf l (+ l 1)))
-         ((eq result 'd) (setf d (+ d 1)))
-      )
-   )
-   (setf results (mapcar #'probability (list w l d) (list n n n)))
-   (if demo (format t "end gathering statistics~%"))
-   (format t "heuristic use summary~%")
-   (summarize-heuristic-use)
-   (mapcar #'list '(w l d) results)
-)
 
 (defmethod probability ((special integer) (total integer))
    ( / (float special) (float total))
@@ -196,6 +171,32 @@
 ; model a heuristic learning player
 (defclass heuristic-learning-machine-player (heuristic-machine-player)
    ()
+)
+
+(defmethod statistics ((play function) (x player) (o player) (n number) (demo t) &aux w ld )
+   (if demo (format t "begin gathering statistics ... ~%"))
+   (setf *nr-random-moves-by-hmp* 0)
+   (setf *nr-heuristic-moves-by-hmp* 0)
+   (setf *nr-random-moves-wins-by-hmp* 0)
+   (setf *nr-heuristic-move-wins-by-hmp* 0)
+   (setf w 0 l 0 d 0)
+   (dotimes (i n)
+      (setf p (apply play (list x o demo)))
+      (if demo (format t "~A~%" p))
+      (if demo (visualize p))
+      (setf result (analyze p))
+      (if demo (format t "~A~%" result))
+      (cond
+         ((eq result 'w) (setf w (+ w 1)))
+         ((eq result 'l) (setf l (+ l 1)))
+         ((eq result 'd) (setf d (+ d 1)))
+      )
+   )
+   (setf results (mapcar #'probability (list w l d) (list n n n)))
+   (if demo (format t "end gathering statistics~%"))
+   (format t "heuristic use summary~%")
+   (summarize-heuristic-use)
+   (mapcar #'list '(w l d) results)
 )
 
 ; textual display of a random machine player
@@ -331,7 +332,7 @@
    (if report (format t "BEGIN MAKE RANDOM MOVE FOR SOME PLAYER ...~%"))
    (setf move (select *avail*))
    (if report (format t "making random move ~A~%" move))
-   (setf *avail* (remove move *avail))
+   (setf *avail* (remove move *avail*))
    (if report (format t "END MAKE RANDOM MOVE FOR SOME PLAYER ~%"))
    move
 )
@@ -437,7 +438,7 @@
          ((eq player 'x)
             (setf move (make-random-move x demo))
          )
-         ((eq player 'y)
+         ((eq player 'o)
             (setf move (make-random-move o demo))
          )
       )
@@ -449,7 +450,7 @@
 )
 
 (defmethod random-play-and-learn (
-   (x heuristic-learning-machine) (o random-machine-player) (verbose t)
+   (x heuristic-learning-machine-player) (o random-machine-player) (verbose t)
    &aux p result
    )
    (setf p (random-play x o verbose))
@@ -465,7 +466,7 @@
    )
 )
 
-(defmethod heuristic-play (
+(defmethod heuristic-play(
    (x heuristic-learning-machine-player) (o random-machine-player) (record t)
    &aux move
    )
@@ -474,7 +475,7 @@
    (dolist (player '(x o x o x o x o x))
       (cond
          ((eq player 'x)
-            setf move (make-heurisic-move x record))
+            (setf move (make-heuristic-move x record))
          )
          ((eq player 'o)
             (setf move (make-random-move o record))
@@ -484,7 +485,7 @@
       (if (game-over-p *play-so-far*) (return nil))
    )
    (cond
-      ((eq (analyze *play-so-far* 'w))
+      ((eq (analyze *play-so-far*) 'w)
          (cond
             ((eq *most-recent-hmp-move* 'random)
                (setf *nr-random-moves-wins-by-hmp* (+ 1 *nr-random-moves-wins-by-hmp*))
