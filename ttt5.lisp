@@ -177,7 +177,7 @@
    (if demo (format t "begin gathering statistics ... ~%"))
    (setf *nr-random-moves-by-hmp* 0)
    (setf *nr-heuristic-moves-by-hmp* 0)
-   (setf *nr-random-moves-wins-by-hmp* 0)
+   (setf *nr-random-move-wins-by-hmp* 0)
    (setf *nr-heuristic-move-wins-by-hmp* 0)
    (setf w 0 l 0 d 0)
    (dotimes (i n)
@@ -419,7 +419,7 @@
       ((eq (analyze *play-so-far*) 'w)
          (cond
             ((eq *most-recent-hmp-move* 'random)
-               (setf *nr-random-moves-wins-by-hmp* (+ 1 *nr-random-moves-wins-by-hmp*))
+               (setf *nr-random-move-wins-by-hmp* (+ 1 *nr-random-move-wins-by-hmp*))
             )
             ((eq *most-recent-hmp-move* 'heuristic)
                (setf *nr-heuristic-move-wins-by-hmp* (+ 1 *nr-heuristic-move-wins-by-hmp*))
@@ -488,7 +488,7 @@
       ((eq (analyze *play-so-far*) 'w)
          (cond
             ((eq *most-recent-hmp-move* 'random)
-               (setf *nr-random-moves-wins-by-hmp* (+ 1 *nr-random-moves-wins-by-hmp*))
+               (setf *nr-random-move-wins-by-hmp* (+ 1 *nr-random-move-wins-by-hmp*))
             )
             ((eq *most-recent-hmp-move* 'heuristic)
                (setf *nr-heuristic-move-wins-by-hmp* (+ 1 *nr-heuristic-move-wins-by-hmp*))
@@ -526,7 +526,7 @@
 )
 
 (defun line (a b c)
-   (setf l (list a b c))
+   (setf _l (list a b c))
    (setf wcond '(
       (nw n ne) (e c w) (sw s se)
       (nw w sw) (n c s) (ne e se)
@@ -534,7 +534,7 @@
    ))
    (dolist (w wcond)
       (cond
-         ((eq (length (intersection w l)) 3)
+         ((eq (length (intersection w _l)) 3)
             (return-from line t)
          )
       )
@@ -582,7 +582,7 @@
       *nr-random-moves-by-hmp* *nr-heuristic-moves-by-hmp*
    )
    (format t "random move wins = ~A and heuristic move wins = ~A~%"
-      *nr-random-moves-wins-by-hmp* *nr-heuristic-move-wins-by-hmp*
+      *nr-random-move-wins-by-hmp* *nr-heuristic-move-wins-by-hmp*
    )
    nil
 )
@@ -612,7 +612,7 @@
 (defmethod demo-heuristic-human ((nr-rules integer) &aux p x o)
    (setf *nr-random-moves-by-hmp* 0)
    (setf *nr-heuristic-moves-by-hmp* 0)
-   (setf *nr-random-moves-wins-by-hmp* 0)
+   (setf *nr-random-move-wins-by-hmp* 0)
    (setf *nr-heuristic-move-wins-by-hmp* 0)
    (setf x (make-instance 'heuristic-machine-player :name 'hm))
    (add-rules x nr-rules)
@@ -632,7 +632,7 @@
 (defmethod demo-heuristic-random ((nr-rules integer) &aux p x o)
    (setf *nr-random-moves-by-hmp* 0)
    (setf *nr-heuristic-moves-by-hmp* 0)
-   (setf *nr-random-moves-wins-by-hmp* 0)
+   (setf *nr-random-move-wins-by-hmp* 0)
    (setf *nr-heuristic-move-wins-by-hmp* 0)
    (setf x (make-instance 'heuristic-machine-player :name 'hm))
    (add-rules x nr-rules)
