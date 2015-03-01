@@ -47,12 +47,11 @@
 )
 
 (defmethod visualize ((lst list))
-   (setf grid '(nil nil nil nil nil nil nil nil nil))
+   (setf grid (list 'nil 'nil 'nil 'nil 'nil 'nil 'nil 'nil 'nil))
    (setf board '(nw n ne w c e sw s se))
    (loop for i from 0 upto (length lst) do
-      (setf move (position (nth i board) lst :test #'equal))
       (cond
-         ((not (eq move nil)) (setf (nth i grid) move))
+         ((not (eq (position (nth i board) lst :test #'equal) nil)) (setf (nth i grid) (position (nth i board) lst :test #'equal)))
       )
    )
    (setf c 0)
@@ -369,8 +368,9 @@
             )
          )
       )
+      *play-so-far*
+      )
    )
-   *play-so-far*
 )
 
 ; predicate to determine if the play is over or not
