@@ -196,7 +196,7 @@
 (defmethod make-rule ( (l list) )
    (setf if-part (list 'prefix 'of l 'matches 'the 'play 'so 'far))
    (setf then-part (list 'select 'move 'from l))
-   (list 'if if-if-part 'then then-part)
+   (list 'if if-part 'then then-part)
 )
 
 (defmethod add-rule ((p heuristic-machine-player) (l list))
@@ -216,7 +216,7 @@
    (format t "~A " (first rule))
    (format t "~A~%" (second rule))
    (format t "~A " (third rule))
-   (format t "~A~%" (forth rule))
+   (format t "~A~%" (fourth rule))
    nil
 )
 
@@ -265,7 +265,7 @@
    (if (null rule)
       (let ()
          (setf move (select *avail*))
-         (setf *nr-random-moves-by-hmp* (+ 1 *nr-random-moves-by-hmp))
+         (setf *nr-random-moves-by-hmp* (+ 1 *nr-random-moves-by-hmp*))
          (setf *most-recent-hmp-move* 'random)
          (if report (format t "making a random move ~A since no rule is applicable.~%" move))
       )
@@ -279,7 +279,7 @@
       )
    )
    (setf *avail* (remove move *avail*))
-   (if report format t "end heuristic player move~%")
+   (if report (format t "end heuristic player move~%"))
    move
 )
 
@@ -355,22 +355,21 @@
          )
       )
       (setf *play-so-far* (snoc move *play-so-far*))
-      (if (game-over-p *play-so-far) return nil)
+      (if (game-over-p *play-so-far*) (return nil))
    )
    (cond
-      ((eq (analyze *play-so-far* 'w)
+      ((eq (analyze *play-so-far*) 'w)
          (cond
-            ((eq *most-recent-hmp-move 'random)
+            ((eq *most-recent-hmp-move* 'random)
                (setf *nr-random-moves-wins-by-hmp* (+ 1 *nr-random-moves-wins-by-hmp*))
             )
-            ((eq *most-recent-hmp-move 'heuristic)
+            ((eq *most-recent-hmp-move* 'heuristic)
                (setf *nr-heristic-move-wins-by-hmp* (+ 1 *nr-heristic-move-wins-by-hmp*))
             )
          )
       )
-      *play-so-far*
-      )
    )
+   *play-so-far*
 )
 
 ; predicate to determine if the play is over or not
